@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>18 Worlds — A Pokémon Type Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&family=Bebas+Neue&family=Raleway:wght@300;400;700;900&family=Merriweather:wght@300;400;700&family=Share+Tech+Mono&family=Quicksand:wght@400;600;700&family=Oswald:wght@400;600;700&family=Cinzel:wght@400;700;900&family=Rye&family=Comfortaa:wght@400;700&family=Josefin+Sans:wght@300;400;700&family=Exo+2:wght@400;700;900&family=Permanent+Marker&family=Creepster&family=Cinzel+Decorative:wght@400;700&family=Courier+Prime:wght@400;700&family=Audiowide&family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: #0a0a0f;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: var(--current-color, #fff); border-radius: 2px; }
+
+/* ===== CUSTOM CURSOR ===== */
+#cursor-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+#cursor-dot {
+  position: fixed;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+  mix-blend-mode: screen;
+}
+#cursor-ring {
+  position: fixed;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.5);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: border-color 0.4s ease, width 0.2s, height 0.2s;
+}
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  height: 100vh;
+  width: 260px;
+  background: rgba(5,5,10,0.92);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  z-index: 1000;
+  transform: translateX(-220px);
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#sidebar::-webkit-scrollbar { display: none; }
+#sidebar:hover, #sidebar.open { transform: translateX(0); }
+#sidebar-toggle {
+  position: absolute;
+  right: -40px; top: 50%;
+  transform: translateY(-50%);
+  width: 40px; height: 80px;
+  background: rgba(5,5,10,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  writing-mode: vertical-rl;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  font-family: 'Share Tech Mono', monospace;
+}
+.sidebar-header {
+  padding: 32px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-header h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.9);
+}
+.sidebar-header p {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.sidebar-list { padding: 12px 0; }
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: none;
+  transition: background 0.2s;
+  text-decoration: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.sidebar-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+.sidebar-item.active::left-border {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--type-color);
+}
+.type-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--dot-color);
+}
+.sidebar-item.active .type-dot {
+  box-shadow: 0 0 14px var(--dot-color), 0 0 4px var(--dot-color);
+}
+.type-badge-mini {
+  margin-left: auto;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  opacity: 0.7;
+}
+
+/* ===== SECTIONS ===== */
+section {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ===== HERO / LANDING ===== */
+#landing {
+  background: #050508;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+}
+.landing-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #1a0a2e 0%, #05050a 60%);
+}
+.stars-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+}
+.landing-content {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+}
+.landing-eyebrow {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 24px;
+  animation: fadeUp 1s ease 0.2s both;
+}
+.landing-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(48px, 8vw, 110px);
+  font-weight: 700;
+  line-height: 0.95;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 40%, #f472b6 70%, #fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeUp 1s ease 0.4s both;
+}
+.landing-subtitle {
+  font-size: 18px;
+  color: rgba(255,255,255,0.5);
+  max-width: 500px;
+  line-height: 1.7;
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  margin: 0 auto 48px;
+  animation: fadeUp 1s ease 0.6s both;
+}
+.type-orbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 400px;
+  margin: 0 auto 48px;
+  animation: fadeUp 1s ease 0.8s both;
+}
+.type-orb {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: float 3s ease-in-out infinite;
+}
+.type-orb:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 20px currentColor;
+}
+.scroll-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  animation: fadeUp 1s ease 1s both, pulse 2s ease-in-out 2s infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.scroll-arrow {
+  width: 20px; height: 30px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  position: relative;
+}
+.scroll-arrow::after {
+  content: '';
+  position: absolute;
+  top: 5px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 8px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  animation: scrollDot 1.5s ease-in-out infinite;
+}
+
+/* ===== TYPE SECTION BASE ===== */
+.type-section {
+  min-height: 100vh;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 0;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.type-section.visible { opacity: 1; transform: translateY(0); }
+.type-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.type-content {
+  position: relative;
+  z-index: 2;
+  padding: 80px 60px 80px 100px;
+}
+.type-image-side {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+.pokemon-artwork {
+  display: none;
+}
+.type-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 280px;
+  position: absolute;
+  right: 40px; top: 50%;
+  transform: translateY(-50%);
+  line-height: 1;
+  color: rgba(255,255,255,0.06);
+  letter-spacing: -10px;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+  text-shadow: 0 0 40px var(--type-glow);
+}
+.type-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 12px;
+}
+.type-name {
+  font-size: clamp(52px, 6vw, 88px);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: var(--type-color);
+  text-shadow: 0 0 60px var(--type-glow);
+}
+.pokemon-name {
+  font-size: clamp(18px, 2.5vw, 28px);
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 20px;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+.type-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.type-badge {
+  padding: 5px 16px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  font-family: 'Share Tech Mono', monospace;
+}
+.type-description {
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 24px;
+  max-width: 440px;
+}
+.pokedex-entry {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 3px solid var(--type-color);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 28px;
+  max-width: 440px;
+}
+.pokedex-entry .label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--type-color);
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+.pokedex-entry p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.7);
+  font-style: italic;
+}
+.type-effectiveness {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  max-width: 440px;
+}
+.effectiveness-box {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px;
+}
+.effectiveness-box .eff-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+.eff-label.strong { color: #4ade80; }
+.eff-label.weak { color: #f87171; }
+.eff-label.resist { color: #60a5fa; }
+.effectiveness-box .eff-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.eff-type-tag {
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.15);
+  white-space: nowrap;
+}
+
+/* ===== OUTRO ===== */
+#outro {
+  min-height: 60vh;
+  background: #050508;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.outro-content {
+  position: relative;
+  z-index: 2;
+}
+.outro-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(28px, 4vw, 56px);
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 20px;
+}
+.outro-text {
+  font-size: 16px;
+  color: rgba(255,255,255,0.4);
+  max-width: 500px;
+  line-height: 1.8;
+  font-family: 'Raleway', sans-serif;
+  margin-bottom: 40px;
+}
+.outro-orbs {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.outro-orb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  animation: float 3s ease-in-out infinite;
+}
+.outro-credit {
+  margin-top: 60px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+@keyframes scrollDot {
+  0% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(12px); opacity: 0; }
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
+}
+
+/* ===== TYPE-SPECIFIC BACKGROUNDS — Nano Banana 2 integrated scenes ===== */
+/* Pattern: each section has a full-bleed generated scene with the Pokémon already in it.
+   A gradient overlay (::before) fades from dark on the content side (for text legibility)
+   to transparent on the scene side (where the Pokémon is visible). */
+
+.type-bg { background-size: cover; background-position: center; }
+.type-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* NORMAL — Eevee in sunlit meadow (content LEFT → fade to right) */
+.bg-normal { background: url('./images/normal.jpg') center/cover no-repeat, #12110c; }
+.bg-normal::before {
+  background:
+    linear-gradient(to right, rgba(18,17,12,0.92) 0%, rgba(18,17,12,0.55) 45%, rgba(18,17,12,0.1) 100%),
+    radial-gradient(ellipse at 70% 50%, rgba(168,167,122,0.18) 0%, transparent 65%);
+  animation: softBreath 6s ease-in-out infinite alternate;
+}
+
+/* FIRE — Charizard breathing fire (content RIGHT → fade to left) */
+.bg-fire { background: url('./images/fire.jpg') center/cover no-repeat, #0a0200; }
+.bg-fire::before {
+  background:
+    linear-gradient(to left, rgba(10,2,0,0.92) 0%, rgba(10,2,0,0.5) 45%, rgba(10,2,0,0.1) 100%),
+    radial-gradient(ellipse at 30% 60%, rgba(238,100,0,0.28) 0%, transparent 65%);
+  animation: fireFlicker 2.8s ease-in-out infinite alternate;
+}
+@keyframes fireFlicker {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* WATER — Blastoise firing hydro cannons (content LEFT → fade to right) */
+.bg-water { background: url('./images/water.jpg') center/cover no-repeat, #020d1a; }
+.bg-water::before {
+  background:
+    linear-gradient(to right, rgba(2,13,26,0.92) 0%, rgba(2,13,26,0.5) 45%, rgba(2,13,26,0.1) 100%),
+    radial-gradient(ellipse at 70% 50%, rgba(99,144,240,0.22) 0%, transparent 65%);
+  animation: waveShimmer 4.5s ease-in-out infinite alternate;
+}
+@keyframes waveShimmer {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* GRASS — Venusaur releasing spores (content RIGHT → fade to left) */
+.bg-grass { background: url('./images/grass.jpg') center/cover no-repeat, #031005; }
+.bg-grass::before {
+  background:
+    linear-gradient(to left, rgba(3,16,5,0.92) 0%, rgba(3,16,5,0.5) 45%, rgba(3,16,5,0.1) 100%),
+    radial-gradient(ellipse at 30% 60%, rgba(122,199,76,0.22) 0%, transparent 65%);
+  animation: grassBreath 5s ease-in-out infinite alternate;
+}
+@keyframes grassBreath {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* ELECTRIC — Pikachu unleashing thunderbolt (content LEFT → fade to right) */
+.bg-electric { background: url('./images/electric.jpg') center/cover no-repeat, #0a0900; }
+.bg-electric::before {
+  background:
+    linear-gradient(to right, rgba(10,9,0,0.88) 0%, rgba(10,9,0,0.45) 45%, rgba(10,9,0,0.1) 100%),
+    radial-gradient(ellipse at 70% 40%, rgba(247,208,44,0.22) 0%, transparent 65%);
+  animation: electricPulse 1.5s ease-in-out infinite;
+}
+@keyframes electricPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* ICE — Articuno soaring over tundra (content RIGHT → fade to left) */
+.bg-ice { background: url('./images/ice.jpg') center/cover no-repeat, #040c0d; }
+.bg-ice::before {
+  background:
+    linear-gradient(to left, rgba(4,12,13,0.92) 0%, rgba(4,12,13,0.5) 45%, rgba(4,12,13,0.1) 100%),
+    radial-gradient(ellipse at 30% 50%, rgba(150,217,214,0.2) 0%, transparent 65%);
+  animation: iceShimmer 5s ease-in-out infinite alternate;
+}
+@keyframes iceShimmer {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* FIGHTING — Lucario smashing rocks (content LEFT → fade to right) */
+.bg-fighting { background: url('./images/fighting.jpg') center/cover no-repeat, #0a0202; }
+.bg-fighting::before {
+  background:
+    linear-gradient(to right, rgba(10,2,2,0.92) 0%, rgba(10,2,2,0.5) 45%, rgba(10,2,2,0.1) 100%),
+    radial-gradient(ellipse at 70% 55%, rgba(194,46,40,0.22) 0%, transparent 65%);
+  animation: auraPulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes auraPulse {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* POISON — Nidoking roaring toxic gas (content RIGHT → fade to left) */
+.bg-poison { background: url('./images/poison.jpg') center/cover no-repeat, #0b000c; }
+.bg-poison::before {
+  background:
+    linear-gradient(to left, rgba(11,0,12,0.92) 0%, rgba(11,0,12,0.5) 45%, rgba(11,0,12,0.1) 100%),
+    radial-gradient(ellipse at 30% 55%, rgba(163,62,161,0.28) 0%, transparent 65%);
+  animation: poisonBubble 3s ease-in-out infinite;
+}
+@keyframes poisonBubble {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* GROUND — Garchomp erupting from sand (content LEFT → fade to right) */
+.bg-ground { background: url('./images/ground.jpg') center/cover no-repeat, #0f0a00; }
+.bg-ground::before {
+  background:
+    linear-gradient(to right, rgba(15,10,0,0.92) 0%, rgba(15,10,0,0.5) 45%, rgba(15,10,0,0.1) 100%),
+    radial-gradient(ellipse at 70% 60%, rgba(226,191,101,0.22) 0%, transparent 65%);
+  animation: sandShift 5s ease-in-out infinite alternate;
+}
+@keyframes sandShift {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* FLYING — Staraptor diving through clouds (content RIGHT → fade to left) */
+.bg-flying { background: url('./images/flying.jpg') center/cover no-repeat, #05050f; }
+.bg-flying::before {
+  background:
+    linear-gradient(to left, rgba(5,5,15,0.9) 0%, rgba(5,5,15,0.45) 45%, rgba(5,5,15,0.08) 100%),
+    radial-gradient(ellipse at 30% 40%, rgba(169,143,243,0.22) 0%, transparent 65%);
+  animation: cloudDrift 6s ease-in-out infinite alternate;
+}
+@keyframes cloudDrift {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* PSYCHIC — Alakazam warping reality (content LEFT → fade to right) */
+.bg-psychic { background: url('./images/psychic.jpg') center/cover no-repeat, #0a0008; }
+.bg-psychic::before {
+  background:
+    linear-gradient(to right, rgba(10,0,8,0.92) 0%, rgba(10,0,8,0.5) 45%, rgba(10,0,8,0.1) 100%),
+    radial-gradient(ellipse at 70% 50%, rgba(249,85,135,0.22) 0%, transparent 65%);
+  animation: psychicPulse 4s ease-in-out infinite;
+}
+@keyframes psychicPulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+/* BUG — Volcarona shedding scales (content RIGHT → fade to left) */
+.bg-bug { background: url('./images/bug.jpg') center/cover no-repeat, #060800; }
+.bg-bug::before {
+  background:
+    linear-gradient(to left, rgba(6,8,0,0.92) 0%, rgba(6,8,0,0.5) 45%, rgba(6,8,0,0.1) 100%),
+    radial-gradient(ellipse at 30% 45%, rgba(166,185,26,0.22) 0%, transparent 65%);
+  animation: emberDance 3s ease-in-out infinite alternate;
+}
+@keyframes emberDance {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* ROCK — Tyranitar summoning sandstorm (content LEFT → fade to right) */
+.bg-rock { background: url('./images/rock.jpg') center/cover no-repeat, #0a0800; }
+.bg-rock::before {
+  background:
+    linear-gradient(to right, rgba(10,8,0,0.92) 0%, rgba(10,8,0,0.5) 45%, rgba(10,8,0,0.1) 100%),
+    radial-gradient(ellipse at 70% 60%, rgba(182,161,54,0.22) 0%, transparent 65%);
+  animation: dustSwirl 5s ease-in-out infinite alternate;
+}
+@keyframes dustSwirl {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* GHOST — Gengar phasing through cathedral (content RIGHT → fade to left) */
+.bg-ghost { background: url('./images/ghost.jpg') center/cover no-repeat, #030004; }
+.bg-ghost::before {
+  background:
+    linear-gradient(to left, rgba(3,0,4,0.9) 0%, rgba(3,0,4,0.5) 45%, rgba(3,0,4,0.1) 100%),
+    radial-gradient(ellipse at 30% 45%, rgba(115,87,151,0.25) 0%, transparent 65%);
+  animation: spectralFloat 6s ease-in-out infinite;
+}
+@keyframes spectralFloat {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* DRAGON — Dragonite flying above clouds (content LEFT → fade to right) */
+.bg-dragon { background: url('./images/dragon.jpg') center/cover no-repeat, #04000c; }
+.bg-dragon::before {
+  background:
+    linear-gradient(to right, rgba(4,0,12,0.92) 0%, rgba(4,0,12,0.5) 45%, rgba(4,0,12,0.1) 100%),
+    radial-gradient(ellipse at 70% 50%, rgba(111,53,252,0.22) 0%, transparent 65%);
+  animation: majestyPulse 5s ease-in-out infinite alternate;
+}
+@keyframes majestyPulse {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* DARK — Umbreon in moonlit forest (content RIGHT → fade to left) */
+.bg-dark { background: url('./images/dark.jpg') center/cover no-repeat, #050201; }
+.bg-dark::before {
+  background:
+    linear-gradient(to left, rgba(5,2,1,0.92) 0%, rgba(5,2,1,0.5) 45%, rgba(5,2,1,0.1) 100%),
+    radial-gradient(ellipse at 30% 50%, rgba(112,87,70,0.2) 0%, transparent 65%);
+  animation: moonBreath 7s ease-in-out infinite alternate;
+}
+@keyframes moonBreath {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+/* STEEL — Metagross over industrial fortress (content LEFT → fade to right) */
+.bg-steel { background: url('./images/steel.jpg') center/cover no-repeat, #0a0a10; }
+.bg-steel::before {
+  background:
+    linear-gradient(to right, rgba(10,10,16,0.92) 0%, rgba(10,10,16,0.5) 45%, rgba(10,10,16,0.1) 100%),
+    radial-gradient(ellipse at 70% 45%, rgba(183,183,206,0.2) 0%, transparent 65%);
+  animation: steelShimmer 3s linear infinite;
+}
+@keyframes steelShimmer {
+  0% { opacity: 0.55; }
+  50% { opacity: 1; }
+  100% { opacity: 0.55; }
+}
+
+/* FAIRY — Sylveon in enchanted garden (content RIGHT → fade to left) */
+.bg-fairy { background: url('./images/fairy.jpg') center/cover no-repeat, #0a0006; }
+.bg-fairy::before {
+  background:
+    linear-gradient(to left, rgba(10,0,6,0.85) 0%, rgba(10,0,6,0.4) 45%, rgba(10,0,6,0.08) 100%),
+    radial-gradient(ellipse at 30% 50%, rgba(214,133,173,0.22) 0%, transparent 65%);
+  animation: fairySparkle 4s ease-in-out infinite;
+}
+@keyframes fairySparkle {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+
+@keyframes softBreath {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+/* ===== PARTICLE LAYERS ===== */
+.particle-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: linear infinite;
+  will-change: transform, opacity;
+}
+.p-ring { background: transparent !important; border: 1.5px solid currentColor; }
+.p-leaf { border-radius: 80% 0 80% 0; }
+.p-streak { border-radius: 0 !important; }
+.p-star {
+  background: transparent !important;
+  border-radius: 0;
+}
+.p-star::before, .p-star::after {
+  content: ''; position: absolute; inset: 0;
+  background: currentColor; border-radius: 1px;
+}
+.p-star::before { transform: rotate(0deg); }
+.p-star::after { transform: rotate(45deg); }
+
+/* Rise (fire embers, ghost flames, dragon sparks) */
+.p-rise { animation-name: pRise; }
+@keyframes pRise {
+  0% { transform: translateY(100vh) translateX(0) scale(0.4); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translateY(50vh) translateX(18px) scale(1); }
+  90% { opacity: 0.8; }
+  100% { transform: translateY(-120px) translateX(-18px) scale(0.2); opacity: 0; }
+}
+/* Bubble (water, poison) */
+.p-bubble { animation-name: pBubble; animation-timing-function: ease-in-out; }
+@keyframes pBubble {
+  0% { transform: translateY(105vh) scale(0); opacity: 0; }
+  12% { opacity: 0.8; transform: translateY(80vh) scale(1); }
+  50% { transform: translateY(40vh) translateX(22px) scale(1.1); }
+  90% { opacity: 0.7; }
+  100% { transform: translateY(-80px) translateX(-18px) scale(0); opacity: 0; }
+}
+/* Fall (snow, leaves) */
+.p-fall { animation-name: pFall; }
+@keyframes pFall {
+  0% { transform: translateY(-100px) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translateY(50vh) translateX(35px) rotate(180deg); }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) translateX(-35px) rotate(360deg); opacity: 0; }
+}
+/* Drift (pollen, dust) */
+.p-drift { animation-name: pDrift; }
+@keyframes pDrift {
+  0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+  15% { opacity: 0.7; }
+  50% { transform: translateY(50vh) translateX(40px); }
+  85% { opacity: 0.7; }
+  100% { transform: translateY(-120px) translateX(-40px); opacity: 0; }
+}
+/* Spark zip (electric, fighting, steel) */
+.p-spark { animation-name: pSpark; }
+@keyframes pSpark {
+  0% { transform: translate(0,0) scale(0); opacity: 0; }
+  10% { opacity: 1; transform: translate(0,0) scale(1.2); }
+  100% { transform: translate(140px, 100px) scale(0); opacity: 0; }
+}
+/* Streak (flying wind) */
+.p-streak-m { animation-name: pStreak; }
+@keyframes pStreak {
+  0% { transform: translateX(-200px); opacity: 0; }
+  20% { opacity: 0.9; }
+  80% { opacity: 0.9; }
+  100% { transform: translateX(110vw); opacity: 0; }
+}
+/* Twinkle (fairy, bug firefly, psychic) */
+.p-twinkle { animation-name: pTwinkle; animation-timing-function: ease-in-out; }
+@keyframes pTwinkle {
+  0%, 100% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+/* ===== PER-TYPE FX LAYER — atmosphere details ===== */
+.type-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.type-fx::before, .type-fx::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+/* Pause animations on sections not currently near viewport for perf */
+.type-section:not(.active-fx) .type-fx::before,
+.type-section:not(.active-fx) .type-fx::after,
+.type-section:not(.active-fx) .particle {
+  animation-play-state: paused;
+}
+
+/* NORMAL — soft sun rays */
+.fx-normal::before {
+  background: radial-gradient(ellipse 80% 60% at 70% 15%, rgba(255,220,160,0.18), transparent 55%);
+  animation: fxSoftRays 6s ease-in-out infinite alternate;
+}
+@keyframes fxSoftRays { from { opacity: 0.5; transform: translateY(0); } to { opacity: 1; transform: translateY(-8px); } }
+
+/* FIRE — heat shimmer + ember wave */
+.fx-fire::before {
+  background:
+    linear-gradient(to top, rgba(255,120,40,0.22) 0%, transparent 40%),
+    radial-gradient(ellipse 60% 40% at 30% 100%, rgba(255,200,100,0.2), transparent 60%);
+  filter: blur(2px);
+  animation: fxHeatShimmer 2.6s ease-in-out infinite alternate;
+}
+.fx-fire::after {
+  top: 55%;
+  background: repeating-linear-gradient(90deg,
+    transparent 0, rgba(255,180,80,0.06) 30px, transparent 60px);
+  filter: blur(3px);
+  animation: fxHeatWave 3s linear infinite;
+}
+@keyframes fxHeatShimmer { from { transform: translateY(0) scaleY(1); opacity: 0.7; } to { transform: translateY(-6px) scaleY(1.03); opacity: 1; } }
+@keyframes fxHeatWave { from { transform: translateX(0) skewX(0deg); } to { transform: translateX(-120px) skewX(0.5deg); } }
+
+/* WATER — rolling wave bands */
+.fx-water::before {
+  background: radial-gradient(ellipse 130% 50% at 50% 100%, rgba(99,144,240,0.28) 0%, transparent 65%);
+  animation: fxWaveRoll 4.5s ease-in-out infinite alternate;
+}
+.fx-water::after {
+  background: repeating-linear-gradient(0deg,
+    transparent 0, rgba(150,200,255,0.05) 3px, transparent 6px);
+  animation: fxRipple 3.5s linear infinite;
+  mix-blend-mode: overlay;
+}
+@keyframes fxWaveRoll { from { transform: translateX(-30px) scaleY(1); opacity: 0.7; } to { transform: translateX(30px) scaleY(1.08); opacity: 1; } }
+@keyframes fxRipple { from { transform: translateY(0); } to { transform: translateY(24px); } }
+
+/* GRASS — swaying foliage + pollen glow */
+.fx-grass::before {
+  background:
+    radial-gradient(circle at 12% 88%, rgba(80,180,60,0.3), transparent 35%),
+    radial-gradient(circle at 88% 92%, rgba(60,150,50,0.25), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(50,140,60,0.25), transparent 40%);
+  animation: fxSway 5s ease-in-out infinite alternate;
+}
+.fx-grass::after {
+  background: radial-gradient(ellipse at 50% 40%, rgba(180,220,120,0.12), transparent 60%);
+  animation: fxSporeGlow 4s ease-in-out infinite alternate;
+}
+@keyframes fxSway { from { transform: translateX(-6px) rotate(-0.4deg); } to { transform: translateX(6px) rotate(0.4deg); } }
+@keyframes fxSporeGlow { from { opacity: 0.5; } to { opacity: 1; } }
+
+/* ELECTRIC — lightning flash bursts */
+.fx-electric::before {
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255,245,130,0.35), transparent 60%);
+  animation: fxFlash 4s ease-out infinite;
+}
+.fx-electric::after {
+  background: linear-gradient(90deg, transparent 30%, rgba(255,255,200,0.08) 50%, transparent 70%);
+  background-size: 300% 100%;
+  animation: fxStrike 2s linear infinite;
+}
+@keyframes fxFlash {
+  0%, 88%, 92%, 96%, 100% { opacity: 0; }
+  90% { opacity: 1; }
+  94% { opacity: 0.4; }
+}
+@keyframes fxStrike { from { background-position: 0 0; } to { background-position: 300% 0; } }
+
+/* ICE — frost edges + slow shimmer */
+.fx-ice::before {
+  background:
+    linear-gradient(to bottom, rgba(200,230,250,0.18), transparent 30%),
+    linear-gradient(to top, rgba(200,230,250,0.12), transparent 30%);
+  animation: fxFrostPulse 4.5s ease-in-out infinite alternate;
+}
+.fx-ice::after {
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(180,220,240,0.1) 100%);
+  animation: fxAurora 7s ease-in-out infinite alternate;
+}
+@keyframes fxFrostPulse { from { opacity: 0.5; } to { opacity: 1; } }
+@keyframes fxAurora { from { opacity: 0.3; transform: translateX(-10px); } to { opacity: 0.8; transform: translateX(10px); } }
+
+/* FIGHTING — aura shockwave */
+.fx-fighting::before {
+  background: radial-gradient(circle at 35% 50%, rgba(255,80,60,0.2), transparent 40%);
+  animation: fxAuraPulse 2s ease-out infinite;
+}
+.fx-fighting::after {
+  background: radial-gradient(circle at 35% 50%, transparent 20%, rgba(100,180,255,0.1) 22%, transparent 28%);
+  animation: fxShock 2.4s ease-out infinite;
+}
+@keyframes fxAuraPulse { 0% { transform: scale(0.92); opacity: 0.3; } 70% { opacity: 1; } 100% { transform: scale(1.15); opacity: 0; } }
+@keyframes fxShock { 0% { transform: scale(0.5); opacity: 0.6; } 100% { transform: scale(2); opacity: 0; } }
+
+/* POISON — bubbling miasma */
+.fx-poison::before {
+  background:
+    radial-gradient(circle at 20% 70%, rgba(163,62,161,0.25), transparent 45%),
+    radial-gradient(circle at 80% 30%, rgba(140,220,80,0.18), transparent 40%);
+  animation: fxGasSwirl 5s ease-in-out infinite alternate;
+}
+@keyframes fxGasSwirl { from { transform: translate(-6px,-4px); opacity: 0.6; } to { transform: translate(6px,4px); opacity: 1; } }
+
+/* GROUND — drifting dust cloud */
+.fx-ground::before {
+  background: linear-gradient(to top, rgba(226,191,101,0.18), transparent 40%);
+  animation: fxDustBlow 5s linear infinite;
+}
+.fx-ground::after {
+  background: radial-gradient(ellipse at 50% 100%, rgba(180,140,70,0.18), transparent 50%);
+  animation: fxQuake 0.3s ease-in-out infinite alternate;
+}
+@keyframes fxDustBlow { 0% { transform: translateX(-30px); opacity: 0.4; } 50% { opacity: 1; } 100% { transform: translateX(30px); opacity: 0.4; } }
+@keyframes fxQuake { from { transform: translateY(0); } to { transform: translateY(1px); } }
+
+/* FLYING — wind streak bands */
+.fx-flying::before {
+  background: repeating-linear-gradient(-10deg,
+    transparent 0, rgba(220,220,255,0.06) 40%, transparent 70%);
+  background-size: 200% 100%;
+  animation: fxWindStreak 3.5s linear infinite;
+}
+@keyframes fxWindStreak { from { background-position: 0 0; } to { background-position: 400px 0; } }
+
+/* PSYCHIC — warp pulse + hue rotation */
+.fx-psychic::before {
+  background: radial-gradient(circle at 50% 50%, rgba(249,85,135,0.2), transparent 60%);
+  animation: fxWarpPulse 3.5s ease-in-out infinite;
+}
+.fx-psychic::after {
+  background: conic-gradient(from 0deg at 60% 50%, transparent, rgba(200,100,255,0.08), transparent);
+  animation: fxSpin 10s linear infinite;
+}
+@keyframes fxWarpPulse { 0%, 100% { transform: scale(1); filter: hue-rotate(0); opacity: 0.5; } 50% { transform: scale(1.1); filter: hue-rotate(20deg); opacity: 1; } }
+@keyframes fxSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* BUG — firefly glow clusters */
+.fx-bug::before {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(255,200,80,0.18), transparent 30%),
+    radial-gradient(circle at 70% 60%, rgba(166,185,26,0.15), transparent 30%);
+  animation: fxFireflies 3s ease-in-out infinite;
+}
+@keyframes fxFireflies { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+/* ROCK — sandstorm sweep */
+.fx-rock::before {
+  background: linear-gradient(45deg, transparent 30%, rgba(200,160,80,0.18) 50%, transparent 70%);
+  background-size: 220% 220%;
+  animation: fxSandstorm 5s linear infinite;
+}
+@keyframes fxSandstorm { from { background-position: 0 0; } to { background-position: 400% 400%; } }
+
+/* GHOST — purple flames flicker */
+.fx-ghost::before {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(180,120,210,0.22), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(100,50,140,0.22), transparent 40%);
+  animation: fxGhostFlicker 3.5s ease-in-out infinite;
+}
+@keyframes fxGhostFlicker {
+  0%, 100% { opacity: 0.5; transform: translateY(0) scale(1); }
+  30% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+  60% { opacity: 0.7; transform: translateY(2px) scale(0.98); }
+}
+
+/* DRAGON — majestic cloud sweep */
+.fx-dragon::before {
+  background: radial-gradient(ellipse at 70% 50%, rgba(140,80,255,0.2), transparent 55%);
+  animation: fxDragonPulse 5s ease-in-out infinite;
+}
+.fx-dragon::after {
+  background: linear-gradient(to right, transparent, rgba(200,180,255,0.08), transparent);
+  animation: fxCloudSweep 8s linear infinite;
+  background-size: 200% 100%;
+}
+@keyframes fxDragonPulse { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes fxCloudSweep { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+/* DARK — moonlight beam + shadow mist */
+.fx-dark::before {
+  background: radial-gradient(ellipse 50% 60% at 50% 0%, rgba(200,210,230,0.16), transparent 50%);
+  animation: fxMoonGlow 6s ease-in-out infinite alternate;
+}
+.fx-dark::after {
+  background: radial-gradient(ellipse at 50% 100%, rgba(20,10,25,0.6), transparent 60%);
+  animation: fxShadowMist 5s ease-in-out infinite alternate;
+}
+@keyframes fxMoonGlow { from { opacity: 0.5; } to { opacity: 1; } }
+@keyframes fxShadowMist { from { transform: translateX(-20px); opacity: 0.5; } to { transform: translateX(20px); opacity: 0.9; } }
+
+/* STEEL — chrome shine sweep */
+.fx-steel::before {
+  background: linear-gradient(135deg, transparent 30%, rgba(220,230,255,0.15) 50%, transparent 70%);
+  background-size: 250% 250%;
+  animation: fxChromeShine 3.5s linear infinite;
+}
+@keyframes fxChromeShine { from { background-position: 0 0; } to { background-position: 250% 250%; } }
+
+/* FAIRY — floating hearts wash */
+.fx-fairy::before {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,180,220,0.2), transparent 35%),
+    radial-gradient(circle at 70% 70%, rgba(255,200,230,0.15), transparent 35%);
+  animation: fxFairyWash 4s ease-in-out infinite alternate;
+}
+.fx-fairy::after {
+  background: radial-gradient(circle at 50% 50%, rgba(255,220,235,0.1), transparent 60%);
+  animation: fxFairyPulse 3s ease-in-out infinite;
+}
+@keyframes fxFairyWash { from { opacity: 0.6; transform: rotate(-1deg) scale(1); } to { opacity: 1; transform: rotate(1deg) scale(1.02); } }
+@keyframes fxFairyPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ===== SECTION DIVIDER — color bleed to next type ===== */
+.section-divider {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 180px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.35) 55%,
+    rgba(0,0,0,0.7) 100%);
+}
+.section-divider::before {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 50%;
+  transform: translateX(-50%);
+  width: 120%; height: 240px;
+  background: radial-gradient(ellipse 50% 60% at 50% 100%, var(--next-type-glow, rgba(255,255,255,0.05)) 0%, transparent 70%);
+  opacity: 0.75;
+  filter: blur(2px);
+}
+.section-divider::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, var(--next-type-color, rgba(255,255,255,0.3)) 50%, transparent 90%);
+  opacity: 0.6;
+  box-shadow: 0 0 24px var(--next-type-color, rgba(255,255,255,0.2));
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .type-section {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  .type-content {
+    padding: 60px 24px 40px 60px;
+    order: 2;
+  }
+  .type-image-side {
+    height: 40vh;
+    order: 1;
+  }
+  .pokemon-artwork { width: min(260px, 80%); }
+  .type-name { font-size: 48px; }
+  .type-effectiveness { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .type-content { padding: 40px 20px 40px 50px; }
+  .type-effectiveness { grid-template-columns: 1fr; }
+  #sidebar { width: 240px; transform: translateX(-200px); }
+}
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<canvas id="cursor-canvas"></canvas>
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar" role="navigation" aria-label="Type navigation">
+  <div id="sidebar-toggle" aria-hidden="true">TYPES</div>
+  <div class="sidebar-header">
+    <h2>TYPE ATLAS</h2>
+    <p>18 Worlds · All Generations</p>
+  </div>
+  <div class="sidebar-list" id="sidebar-list"></div>
+</nav>
+
+<!-- ===== LANDING ===== -->
+<section id="landing">
+  <div class="landing-bg"></div>
+  <canvas class="stars-canvas" id="stars-canvas"></canvas>
+  <div class="landing-content">
+    <p class="landing-eyebrow">A Pokémon Type Atlas</p>
+    <h1 class="landing-title">18 Worlds</h1>
+    <p class="landing-subtitle">Every type is a universe. Step inside each one — from the volcanic fury of Fire to the ethereal silence of Ghost.</p>
+    <div class="type-orbs" id="landing-orbs"></div>
+    <div class="scroll-hint">
+      <div class="scroll-arrow"></div>
+      Scroll to explore
+    </div>
+  </div>
+</section>
+
+<!-- ===== TYPE SECTIONS (generated by JS) ===== -->
+<div id="type-sections-container"></div>
+
+<!-- ===== OUTRO ===== -->
+<section id="outro">
+  <div class="outro-content">
+    <h2 class="outro-title">Every World Explored.</h2>
+    <p class="outro-text">From the everyday grace of Normal to the divine magic of Fairy — 18 types, 18 stories, one Pokémon world. This is a non-commercial educational project.</p>
+    <div class="outro-orbs" id="outro-orbs"></div>
+    <p class="outro-credit">Pokémon © 1995–2025 Nintendo · Game Freak · Creatures Inc. — School Final Project</p>
+  </div>
+</section>
+
+<script>
+// ===== TYPE DATA =====
+const TYPES = [
+  {
+    id: 'normal',
+    name: 'NORMAL',
+    color: '#A8A77A',
+    glow: 'rgba(168,167,122,0.5)',
+    shadow: 'rgba(168,167,122,0.4)',
+    bg: 'bg-normal',
+    font: "'Nunito', sans-serif",
+    fontWeight: '800',
+    pokemon: 'Eevee',
+    pokemonId: 133,
+    types: ['Normal'],
+    whyBest: 'Eevee is the ultimate Normal-type icon — the only Pokémon with eight distinct evolutions, all triggered by its environment. This genetic flexibility is the very soul of the Normal type: adaptable, full of potential, and deceptively powerful despite its unassuming appearance.',
+    typeRole: 'Normal types are the versatile backbone of the Pokémon world. Unspecialized but never weak, they represent everyday life, steady growth, and hidden potential. In battle, they resist nothing and fall only to Fighting — but their moves land neutrally against nearly everything.',
+    dex: '"Its genes are easily influenced by its surroundings. Even its face starts to look like that of its Trainer." — Pokémon Ultra Moon',
+    strong: ['—'],
+    weak: ['Fighting'],
+    resist: ['—'],
+    immune: ['Ghost'],
+    cursorColors: ['#A8A77A', '#d4d0a0', '#e8e6c4'],
+    particleColor: 'rgba(168,167,122,0.4)',
+  },
+  {
+    id: 'fire',
+    name: 'FIRE',
+    color: '#EE8130',
+    glow: 'rgba(238,129,48,0.6)',
+    shadow: 'rgba(238,80,20,0.6)',
+    bg: 'bg-fire',
+    font: "'Bebas Neue', sans-serif",
+    fontWeight: '400',
+    pokemon: 'Charizard',
+    pokemonId: 6,
+    types: ['Fire', 'Flying'],
+    whyBest: 'Charizard is the eternal symbol of fire\'s duality — destruction and majesty intertwined. Its code of honor, refusing to burn weaker opponents, elevates it beyond raw power. It doesn\'t just embody Fire; it commands it with a warrior\'s spirit.',
+    typeRole: 'Fire types are forces of pure transformation — consuming the old to forge something new. In battle, they incinerate Grass, Bug, Ice, and Steel, punishing those who stand rigid against the heat. Their greatest foes are Water, Rock, and Ground.',
+    dex: '"Charizard flies around the sky in search of powerful opponents. It breathes fire of such great heat that it melts anything. However, it never turns its fiery breath on any opponent weaker than itself." — Generation III',
+    strong: ['Bug', 'Grass', 'Ice', 'Steel'],
+    weak: ['Water', 'Rock', 'Ground'],
+    resist: ['Fire', 'Grass', 'Ice', 'Bug', 'Steel', 'Fairy'],
+    immune: [],
+    cursorColors: ['#EE8130', '#FF4500', '#FFD700'],
+    particleColor: 'rgba(238,100,30,0.5)',
+  },
+  {
+    id: 'water',
+    name: 'WATER',
+    color: '#6390F0',
+    glow: 'rgba(99,144,240,0.6)',
+    shadow: 'rgba(56,100,220,0.5)',
+    bg: 'bg-water',
+    font: "'Raleway', sans-serif",
+    fontWeight: '700',
+    pokemon: 'Blastoise',
+    pokemonId: 9,
+    types: ['Water'],
+    whyBest: 'Blastoise is Water type distilled into pure, armored authority. Its twin cannons — capable of punching through steel — demonstrate that water isn\'t gentle; it\'s relentless. It is both fortress and flood, the archetype of disciplined, unstoppable force.',
+    typeRole: 'Water is the most abundant type in the Pokémon world, reflecting the ocean\'s role as the cradle of all life. In battle, Water types dominate Fire, Ground, and Rock — erosion made instant. Only Electric and Grass can challenge the deep.',
+    dex: '"The rocket cannons on its shell fire jets of water capable of punching holes through thick steel." — Pokémon Gold/Silver',
+    strong: ['Fire', 'Ground', 'Rock'],
+    weak: ['Electric', 'Grass'],
+    resist: ['Fire', 'Water', 'Ice', 'Steel'],
+    immune: [],
+    cursorColors: ['#6390F0', '#38BDF8', '#BAE6FD'],
+    particleColor: 'rgba(99,144,240,0.4)',
+  },
+  {
+    id: 'grass',
+    name: 'GRASS',
+    color: '#7AC74C',
+    glow: 'rgba(122,199,76,0.5)',
+    shadow: 'rgba(34,197,94,0.4)',
+    bg: 'bg-grass',
+    font: "'Merriweather', serif",
+    fontWeight: '700',
+    pokemon: 'Venusaur',
+    pokemonId: 3,
+    types: ['Grass', 'Poison'],
+    whyBest: 'Venusaur carries an entire ecosystem on its back. The flower blooming from its shoulders — photosynthesizing sunlight into raw energy — makes it a living cathedral of Grass-type power. It grows stronger with every ray of sun, patient and inevitable as nature itself.',
+    typeRole: 'Grass types are the living world — slow to anger, but deep-rooted and persistent. They control the terrain, draining Water, Ground, and Rock of their power. A Grass type doesn\'t overpower enemies; it outlasts them through energy and entanglement.',
+    dex: '"The flower on its back catches the sun\'s rays. The sunlight is then absorbed and used for energy." — Pokémon Yellow',
+    strong: ['Ground', 'Rock', 'Water'],
+    weak: ['Fire', 'Ice', 'Poison', 'Flying', 'Bug'],
+    resist: ['Water', 'Grass', 'Electric', 'Ground'],
+    immune: [],
+    cursorColors: ['#7AC74C', '#22C55E', '#BBF7D0'],
+    particleColor: 'rgba(122,199,76,0.3)',
+  },
+  {
+    id: 'electric',
+    name: 'ELECTRIC',
+    color: '#F7D02C',
+    glow: 'rgba(247,208,44,0.7)',
+    shadow: 'rgba(234,179,8,0.5)',
+    bg: 'bg-electric',
+    font: "'Share Tech Mono', monospace",
+    fontWeight: '400',
+    pokemon: 'Pikachu',
+    pokemonId: 25,
+    types: ['Electric'],
+    whyBest: 'Pikachu is the global face of Pokémon, and no accident it\'s Electric. Its sparks are the franchise\'s heartbeat — instantaneous, energetic, everywhere at once. When a group gathers, they generate storms. That collective electrical energy defines the type perfectly.',
+    typeRole: 'Electric types move at the speed of light, controlling the battlefield with shocking precision. They dominate Water and Flying types, and their only true weakness is the Ground that absorbs their current. Fast, technical, and never predictable.',
+    dex: '"When several of these Pokémon gather, their electricity could build and cause lightning storms." — Pokémon Red/Blue',
+    strong: ['Flying', 'Water'],
+    weak: ['Ground'],
+    resist: ['Electric', 'Flying', 'Steel'],
+    immune: [],
+    cursorColors: ['#F7D02C', '#FDE047', '#FEF08A'],
+    particleColor: 'rgba(247,208,44,0.5)',
+  },
+  {
+    id: 'ice',
+    name: 'ICE',
+    color: '#96D9D6',
+    glow: 'rgba(150,217,214,0.5)',
+    shadow: 'rgba(186,230,253,0.4)',
+    bg: 'bg-ice',
+    font: "'Quicksand', sans-serif",
+    fontWeight: '600',
+    pokemon: 'Articuno',
+    pokemonId: 144,
+    types: ['Ice', 'Flying'],
+    whyBest: 'Articuno is mythic Ice — a legendary bird said to appear to those doomed to die in frozen peaks. Where other Pokémon command ice, Articuno is ice: timeless, untouchable, and beautiful in the way only things that could kill you truly are.',
+    typeRole: 'Ice types are the sculptors of desolation. They freeze Dragon ambition, Ground sturdiness, Flying freedom, and Grass vitality in a single moment. Brittle against Fire, Steel, Rock, and Fighting, but nothing stops their chill from reshaping the world.',
+    dex: '"A legendary bird Pokémon that is said to appear to doomed people who are lost in icy mountains." — Pokémon Red/Blue',
+    strong: ['Dragon', 'Flying', 'Grass', 'Ground'],
+    weak: ['Fire', 'Fighting', 'Rock', 'Steel'],
+    resist: ['Ice'],
+    immune: [],
+    cursorColors: ['#96D9D6', '#BAE6FD', '#E0F7FA'],
+    particleColor: 'rgba(150,217,214,0.35)',
+  },
+  {
+    id: 'fighting',
+    name: 'FIGHTING',
+    color: '#C22E28',
+    glow: 'rgba(194,46,40,0.6)',
+    shadow: 'rgba(239,68,68,0.4)',
+    bg: 'bg-fighting',
+    font: "'Oswald', sans-serif",
+    fontWeight: '700',
+    pokemon: 'Lucario',
+    pokemonId: 448,
+    types: ['Fighting', 'Steel'],
+    whyBest: 'Lucario reads auras from half a mile away — it knows your fighting spirit before you throw a punch. That combination of martial mastery and psychological depth makes it the platonic ideal of the Fighting type: power guided by wisdom.',
+    typeRole: 'Fighting types are disciplined warriors who break through brute force and structure alike. They shatter Normal, Ice, Rock, Dark, and Steel with trained precision. Their nemeses — Fairy, Flying, and Psychic — represent forces that transcend physical combat.',
+    dex: '"By reading the auras of all things, it can tell how others are feeling from over half a mile away." — Pokémon Diamond/Pearl',
+    strong: ['Dark', 'Normal', 'Rock', 'Steel'],
+    weak: ['Fairy', 'Flying', 'Psychic'],
+    resist: ['Bug', 'Rock', 'Dark'],
+    immune: [],
+    cursorColors: ['#C22E28', '#EF4444', '#FCA5A5'],
+    particleColor: 'rgba(194,46,40,0.5)',
+  },
+  {
+    id: 'poison',
+    name: 'POISON',
+    color: '#A33EA1',
+    glow: 'rgba(163,62,161,0.6)',
+    shadow: 'rgba(168,85,247,0.4)',
+    bg: 'bg-poison',
+    font: "'Cinzel', serif",
+    fontWeight: '400',
+    pokemon: 'Nidoking',
+    pokemonId: 34,
+    types: ['Poison', 'Ground'],
+    whyBest: 'Nidoking is the sovereign of Poison — regal, venomous, and unstoppable. Its rampage reshapes landscapes, yet near a Nidoqueen it knows, it is entirely calm. This duality of ferocity and tenderness mirrors the complexity of poison: deadly but never mindless.',
+    typeRole: 'Poison types are the dark alchemy of the Pokémon world — corrosive, persistent, and spreading. They prey on Grass and Fairy types, corrupting life and beauty alike. Ground and Psychic can purge them, but their toxins linger long after the battle ends.',
+    dex: '"When it goes on a rampage, it\'s impossible to control. But in the presence of a Nidoqueen it\'s lived with for a long time, Nidoking calms down." — Pokémon Sword',
+    strong: ['Fairy', 'Grass'],
+    weak: ['Ground', 'Psychic'],
+    resist: ['Grass', 'Poison', 'Bug', 'Fairy'],
+    immune: [],
+    cursorColors: ['#A33EA1', '#C026D3', '#E879F9'],
+    particleColor: 'rgba(163,62,161,0.4)',
+  },
+  {
+    id: 'ground',
+    name: 'GROUND',
+    color: '#E2BF65',
+    glow: 'rgba(226,191,101,0.5)',
+    shadow: 'rgba(202,138,4,0.4)',
+    bg: 'bg-ground',
+    font: "'Rye', cursive",
+    fontWeight: '400',
+    pokemon: 'Garchomp',
+    pokemonId: 445,
+    types: ['Dragon', 'Ground'],
+    whyBest: 'Garchomp tears across the earth at blinding speed, equally at home beneath dunes or above clouds. As a Dragon/Ground type, it channels the raw tectonic power of the planet itself — the apex predator of the underground, soaring from cracked earth like a living earthquake.',
+    typeRole: 'Ground types dominate the literal foundation of the world. They neutralize Electric entirely — no current survives earthing — and punish Fire, Poison, Rock, and Steel. Slow against Water, Grass, and Ice, but the earth beneath every battle belongs to them.',
+    dex: '"Soars across the heavens at blinding speed — a magnificent sight! It has a feral disposition. Utmost caution is required if one meets a Garchomp out in the wilds." — Pokémon Legends: Arceus',
+    strong: ['Electric', 'Fire', 'Poison', 'Rock', 'Steel'],
+    weak: ['Water', 'Grass', 'Ice'],
+    resist: ['Poison', 'Rock'],
+    immune: ['Electric'],
+    cursorColors: ['#E2BF65', '#CA8A04', '#FDE68A'],
+    particleColor: 'rgba(226,191,101,0.35)',
+  },
+  {
+    id: 'flying',
+    name: 'FLYING',
+    color: '#A98FF3',
+    glow: 'rgba(169,143,243,0.6)',
+    shadow: 'rgba(139,92,246,0.4)',
+    bg: 'bg-flying',
+    font: "'Comfortaa', sans-serif",
+    fontWeight: '700',
+    pokemon: 'Staraptor',
+    pokemonId: 398,
+    types: ['Normal', 'Flying'],
+    whyBest: 'Staraptor soars effortlessly while clutching prey heavier than 880 lbs. That casual, gravity-defying mastery defines Flying perfectly: the sky is not where Flying types go — it\'s where they live. The ground is a temporary inconvenience.',
+    typeRole: 'Flying types rule the open sky, immune to Ground attacks and able to target the wide battlefield below. They punish Grass, Fighting, and Bug from above. Their weaknesses — Electric, Ice, and Rock — all come from below or above, challenging their aerial supremacy.',
+    dex: '"It can easily soar through the sky while gripping a Steelix that weighs more than 880 lbs." — Pokémon Legends: Z-A',
+    strong: ['Bug', 'Fighting', 'Grass'],
+    weak: ['Electric', 'Ice', 'Rock'],
+    resist: ['Grass', 'Fighting', 'Bug'],
+    immune: ['Ground'],
+    cursorColors: ['#A98FF3', '#7C3AED', '#DDD6FE'],
+    particleColor: 'rgba(169,143,243,0.35)',
+  },
+  {
+    id: 'psychic',
+    name: 'PSYCHIC',
+    color: '#F95587',
+    glow: 'rgba(249,85,135,0.6)',
+    shadow: 'rgba(236,72,153,0.5)',
+    bg: 'bg-psychic',
+    font: "'Josefin Sans', sans-serif",
+    fontWeight: '700',
+    pokemon: 'Alakazam',
+    pokemonId: 65,
+    types: ['Psychic'],
+    whyBest: 'Alakazam\'s IQ of 5,000 and supercomputer-level brain make it the most purely intellectual Pokémon. The Psychic type is the mind turned weapon — and Alakazam is its highest expression: a being that has transcended brute force entirely in favor of pure cognitive supremacy.',
+    typeRole: 'Psychic types weaponize the mind itself — telekinesis, future-sight, and psychic barriers separate them from the physical. They overwhelm Fighting and Poison. Their darkness comes from their own limitations: Bug, Ghost, and Dark types exploit the blind spots of even the most powerful intellect.',
+    dex: '"Its brain can outperform a supercomputer. Its intelligence quotient is said to be 5,000." — Pokémon Red/Blue',
+    strong: ['Fighting', 'Poison'],
+    weak: ['Bug', 'Ghost', 'Dark'],
+    resist: ['Fighting', 'Psychic'],
+    immune: [],
+    cursorColors: ['#F95587', '#EC4899', '#FBCFE8'],
+    particleColor: 'rgba(249,85,135,0.4)',
+  },
+  {
+    id: 'bug',
+    name: 'BUG',
+    color: '#A6B91A',
+    glow: 'rgba(166,185,26,0.5)',
+    shadow: 'rgba(132,204,22,0.4)',
+    bg: 'bg-bug',
+    font: "'Exo 2', sans-serif",
+    fontWeight: '700',
+    pokemon: 'Volcarona',
+    pokemonId: 637,
+    types: ['Bug', 'Fire'],
+    whyBest: 'Volcarona was hatched from a flaming cocoon to save the world from cold — a myth made real. As a Bug/Fire type, it transcends both categories into something divine. Where most Bugs are easily dismissed, Volcarona burns with the fire of legend.',
+    typeRole: 'Bug types are often underestimated, yet they are the great deceivers — small but persistent, capable of finding cracks in Grass, Psychic, and Dark defenses. They struggle against Fire, Flying, and Rock, but their power lies in numbers, in patience, in swarming what cannot be stopped.',
+    dex: '"According to legends, it was hatched from a flaming cocoon to save people and Pokémon that were suffering from the cold." — Pokémon Ultra Moon',
+    strong: ['Dark', 'Grass', 'Psychic'],
+    weak: ['Fire', 'Flying', 'Rock'],
+    resist: ['Grass', 'Fighting', 'Ground'],
+    immune: [],
+    cursorColors: ['#A6B91A', '#84CC16', '#D9F99D'],
+    particleColor: 'rgba(166,185,26,0.35)',
+  },
+  {
+    id: 'rock',
+    name: 'ROCK',
+    color: '#B6A136',
+    glow: 'rgba(182,161,54,0.5)',
+    shadow: 'rgba(161,161,1,0.4)',
+    bg: 'bg-rock',
+    font: "'Permanent Marker', cursive",
+    fontWeight: '400',
+    pokemon: 'Tyranitar',
+    pokemonId: 248,
+    types: ['Rock', 'Dark'],
+    whyBest: 'Tyranitar is geological cataclysm given teeth. When it rampages, maps must be redrawn. That is not a battle — that is a tectonic event. As the apex Rock-type predator, it embodies stone\'s ultimate truth: the patient mountain that, when it moves, reshapes everything.',
+    typeRole: 'Rock types are the mountains\' own soldiers — ancient, enduring, and devastating against Bug, Fire, Flying, and Ice. Their weight is their weakness too: Fighting, Grass, Ground, Steel, and Water all chip away at them. But what rock breaks easily has simply not been tested long enough.',
+    dex: '"If it rampages, it knocks down mountains and buries rivers. Maps must be redrawn afterward." — Pokémon Gold/Silver',
+    strong: ['Bug', 'Fire', 'Flying', 'Ice'],
+    weak: ['Fighting', 'Grass', 'Ground', 'Steel', 'Water'],
+    resist: ['Fire', 'Flying', 'Normal', 'Poison'],
+    immune: [],
+    cursorColors: ['#B6A136', '#CA8A04', '#FEF08A'],
+    particleColor: 'rgba(182,161,54,0.35)',
+  },
+  {
+    id: 'ghost',
+    name: 'GHOST',
+    color: '#735797',
+    glow: 'rgba(115,87,151,0.6)',
+    shadow: 'rgba(109,40,217,0.4)',
+    bg: 'bg-ghost',
+    font: "'Creepster', cursive",
+    fontWeight: '400',
+    pokemon: 'Gengar',
+    pokemonId: 94,
+    types: ['Ghost', 'Poison'],
+    whyBest: 'Gengar was once human. Now it drifts in shadow, longing for companionship it cannot have, taking lives to fill a void that can never be filled. That haunted loneliness — the tragedy of existing beyond the living world — is the Ghost type\'s deepest truth.',
+    typeRole: 'Ghost types exist between worlds — unseen, immune to Normal and Fighting attacks that cannot touch what doesn\'t fully exist. They prey on other Ghosts and Psychic types, attacking the very mind. Only Dark and other Ghosts can truly see and harm them.',
+    dex: '"It apparently wishes for a traveling companion. Since it was once human itself, it tries to create one by taking the lives of other humans." — Pokémon Moon',
+    strong: ['Ghost', 'Psychic'],
+    weak: ['Dark', 'Ghost'],
+    resist: ['Bug', 'Poison'],
+    immune: ['Normal', 'Fighting'],
+    cursorColors: ['#735797', '#7C3AED', '#C4B5FD'],
+    particleColor: 'rgba(115,87,151,0.4)',
+  },
+  {
+    id: 'dragon',
+    name: 'DRAGON',
+    color: '#6F35FC',
+    glow: 'rgba(111,53,252,0.7)',
+    shadow: 'rgba(109,40,217,0.5)',
+    bg: 'bg-dragon',
+    font: "'Cinzel Decorative', serif",
+    fontWeight: '700',
+    pokemon: 'Dragonite',
+    pokemonId: 149,
+    types: ['Dragon', 'Flying'],
+    whyBest: 'Dragonite rescues shipwrecked sailors and guides them to hidden islands. Behind that vast power — the power of a Dragon — is a guardian\'s soul. It is the Dragon type\'s greatest secret: raw, legendary might in service of something genuinely good.',
+    typeRole: 'Dragon types represent the pinnacle of natural power — ancient, mythological, and resistant to Fire, Water, Grass, and Electric. Their one offensive target is other Dragons. They fear Ice, their own kind, and above all Fairy — because even ancient power bows to magic.',
+    dex: '"This Pokémon saved a shipwrecked man, taking him to a remote island — a paradise occupied solely by Dragonite." — Pokémon Sun',
+    strong: ['Dragon'],
+    weak: ['Dragon', 'Fairy', 'Ice'],
+    resist: ['Electric', 'Fire', 'Grass', 'Water'],
+    immune: [],
+    cursorColors: ['#6F35FC', '#4F46E5', '#A78BFA'],
+    particleColor: 'rgba(111,53,252,0.4)',
+  },
+  {
+    id: 'dark',
+    name: 'DARK',
+    color: '#705746',
+    glow: 'rgba(112,87,70,0.5)',
+    shadow: 'rgba(120,53,15,0.4)',
+    bg: 'bg-dark',
+    font: "'Courier Prime', monospace",
+    fontWeight: '700',
+    pokemon: 'Umbreon',
+    pokemonId: 197,
+    types: ['Dark'],
+    whyBest: 'Umbreon blends into darkness and goes for the throat. No theatrics, no mercy — just patience, shadow, and precision. It is the Dark type made manifest: not evil for evil\'s sake, but darkness as a strategic reality. It hunts because it was built to.',
+    typeRole: 'Dark types are the pragmatists of the Pokémon world — immune to Psychic manipulation and effective against Ghost and Psychic. They favor cunning over honor, surprise over fairness. Their weakness to Fairy, Bug, and Fighting means their darkness isn\'t absolute — it can be countered by love, persistence, or raw discipline.',
+    dex: '"With its black fur, it blends into the darkness. It bides its time, and when prey appears, this Pokémon goes for its throat, and then eats it." — Pokémon Moon',
+    strong: ['Ghost', 'Psychic'],
+    weak: ['Bug', 'Fairy', 'Fighting'],
+    resist: ['Dark', 'Ghost'],
+    immune: ['Psychic'],
+    cursorColors: ['#705746', '#92400E', '#D97706'],
+    particleColor: 'rgba(112,87,70,0.35)',
+  },
+  {
+    id: 'steel',
+    name: 'STEEL',
+    color: '#B7B7CE',
+    glow: 'rgba(183,183,206,0.5)',
+    shadow: 'rgba(148,163,184,0.4)',
+    bg: 'bg-steel',
+    font: "'Audiowide', sans-serif",
+    fontWeight: '400',
+    pokemon: 'Metagross',
+    pokemonId: 376,
+    types: ['Steel', 'Psychic'],
+    whyBest: 'Metagross is the most resistant Pokémon in the game — immune to Poison, resistant to 10 types. Four brains fused into one supercomputer, operating with ruthless algorithmic efficiency. It is steel as intelligence: cold, calculated, and unbreakable.',
+    typeRole: 'Steel types are the ultimate defensive archetype — resisting 10 different types and immune to Poison entirely. They crush Ice, Rock, and Fairy. Only Fire, Fighting, and Ground can truly threaten them. Steel is not about aggression; it is about being impossible to destroy.',
+    dex: '"Mega Evolution stimulated its brain. It emerged as a ruthless Pokémon that will clutch at any means of ensuring its victories." — Pokémon Moon',
+    strong: ['Fairy', 'Ice', 'Rock'],
+    weak: ['Fighting', 'Fire', 'Ground'],
+    resist: ['Bug', 'Dragon', 'Fairy', 'Flying', 'Grass', 'Ice', 'Normal', 'Psychic', 'Rock', 'Steel'],
+    immune: ['Poison'],
+    cursorColors: ['#B7B7CE', '#94A3B8', '#E2E8F0'],
+    particleColor: 'rgba(183,183,206,0.35)',
+  },
+  {
+    id: 'fairy',
+    name: 'FAIRY',
+    color: '#D685AD',
+    glow: 'rgba(214,133,173,0.6)',
+    shadow: 'rgba(244,114,182,0.5)',
+    bg: 'bg-fairy',
+    font: "'Pacifico', cursive",
+    fontWeight: '400',
+    pokemon: 'Sylveon',
+    pokemonId: 700,
+    types: ['Fairy'],
+    whyBest: 'Sylveon charges fearlessly at Dragons many times its size. Behind the ribbons and the grace is absolute fearlessness — the conviction that love and light can stop a dragon cold. That is Fairy\'s truth: not delicate, but transcendent. Dragons fall. Fairy stands.',
+    typeRole: 'Fairy types are the newest addition to the type chart, added to balance the overdominating Dragon. Immune to Dragon entirely, they slay Fighting, Dragon, and Dark with divine grace. Their only weaknesses are Poison and Steel — corruption and cold metal against pure magic.',
+    dex: '"Once a fight breaks out, it will unflinchingly charge at dragon Pokémon that are many times larger than itself." — Pokémon Ultra Sun',
+    strong: ['Dark', 'Dragon', 'Fighting'],
+    weak: ['Poison', 'Steel'],
+    resist: ['Bug', 'Dark', 'Fighting'],
+    immune: ['Dragon'],
+    cursorColors: ['#D685AD', '#EC4899', '#FBCFE8'],
+    particleColor: 'rgba(214,133,173,0.4)',
+  },
+];
+
+const SPRITE_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+
+// ===== BUILD SIDEBAR =====
+function buildSidebar() {
+  const list = document.getElementById('sidebar-list');
+  TYPES.forEach((t, i) => {
+    const a = document.createElement('a');
+    a.href = `#section-${t.id}`;
+    a.className = 'sidebar-item';
+    a.dataset.type = t.id;
+    a.setAttribute('aria-label', `${t.name} type — ${t.pokemon}`);
+    a.innerHTML = `
+      <div class="type-dot" style="--dot-color:${t.color};background:${t.color}"></div>
+      <span>${t.pokemon}</span>
+      <span class="type-badge-mini" style="background:${t.color}22;color:${t.color};border-color:${t.color}44">${t.name}</span>
+    `;
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById(`section-${t.id}`).scrollIntoView({ behavior: 'smooth' });
+    });
+    list.appendChild(a);
+  });
+}
+
+// ===== BUILD TYPE SECTIONS =====
+function buildSections() {
+  const container = document.getElementById('type-sections-container');
+  TYPES.forEach((t, i) => {
+    const strongList = t.strong.map(s => `<span class="eff-type-tag" style="color:${getTypeColor(s)};border-color:${getTypeColor(s)}44">${s}</span>`).join('');
+    const weakList = t.weak.map(s => `<span class="eff-type-tag" style="color:${getTypeColor(s)};border-color:${getTypeColor(s)}44">${s}</span>`).join('');
+    const resistList = t.resist.map(s => `<span class="eff-type-tag" style="color:${getTypeColor(s)};border-color:${getTypeColor(s)}44">${s}</span>`).join('') || '<span class="eff-type-tag">—</span>';
+    const immuneList = t.immune.length ? `<div class="effectiveness-box"><div class="eff-label" style="color:#fbbf24">IMMUNE TO</div><div class="eff-types">${t.immune.map(s=>`<span class="eff-type-tag" style="color:${getTypeColor(s)};border-color:${getTypeColor(s)}44">${s}</span>`).join('')}</div></div>` : '';
+    const typeBadgesHtml = t.types.map(tp => `<span class="type-badge" style="background:${getTypeColor(tp)}22;color:${getTypeColor(tp)};border-color:${getTypeColor(tp)}44">${tp}</span>`).join('');
+    const isEven = i % 2 === 0;
+
+    const section = document.createElement('section');
+    section.id = `section-${t.id}`;
+    section.className = `type-section`;
+    section.dataset.type = t.id;
+    section.dataset.color = t.color;
+    const next = TYPES[i+1];
+    const nextColor = next ? next.color : '#ffffff';
+    const nextGlow = next ? next.glow : 'rgba(255,255,255,0.1)';
+    section.style.cssText = `--type-color:${t.color};--type-glow:${t.glow};--type-shadow:${t.shadow};--next-type-color:${nextColor};--next-type-glow:${nextGlow}`;
+
+    section.innerHTML = `
+      <div class="type-bg ${t.bg}"></div>
+      <div class="type-fx fx-${t.id}"></div>
+      <div class="particle-layer" data-type="${t.id}"></div>
+      ${isEven ? `
+        <div class="type-content" style="font-family:${t.font}">
+          <p class="type-label">#${String(i+1).padStart(2,'0')} · ${i === 0 ? 'First' : ['Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth','Eleventh','Twelfth','Thirteenth','Fourteenth','Fifteenth','Sixteenth','Seventeenth','Eighteenth'][i-1]} Type</p>
+          <h2 class="type-name" style="font-family:${t.font};font-weight:${t.fontWeight}">${t.name}</h2>
+          <p class="pokemon-name">${t.pokemon}</p>
+          <div class="type-badges">${typeBadgesHtml}</div>
+          <p class="type-description">${t.whyBest}</p>
+          <p class="type-description" style="opacity:0.6;font-size:13px;margin-bottom:20px">${t.typeRole}</p>
+          <div class="pokedex-entry">
+            <div class="label">◆ POKÉDEX</div>
+            <p>${t.dex}</p>
+          </div>
+          <div class="type-effectiveness">
+            <div class="effectiveness-box"><div class="eff-label strong">STRONG VS</div><div class="eff-types">${strongList || '<span class="eff-type-tag">—</span>'}</div></div>
+            <div class="effectiveness-box"><div class="eff-label weak">WEAK TO</div><div class="eff-types">${weakList}</div></div>
+            <div class="effectiveness-box"><div class="eff-label resist">RESISTS</div><div class="eff-types">${resistList}</div></div>
+            ${immuneList}
+          </div>
+        </div>
+        <div class="type-image-side">
+          <div class="type-number">${String(i+1).padStart(2,'0')}</div>
+          <img class="pokemon-artwork" src="${SPRITE_BASE}${t.pokemonId}.png" alt="${t.pokemon} official artwork" loading="lazy">
+        </div>
+      ` : `
+        <div class="type-image-side">
+          <div class="type-number">${String(i+1).padStart(2,'0')}</div>
+          <img class="pokemon-artwork" src="${SPRITE_BASE}${t.pokemonId}.png" alt="${t.pokemon} official artwork" loading="lazy">
+        </div>
+        <div class="type-content" style="font-family:${t.font};padding-left:60px">
+          <p class="type-label">#${String(i+1).padStart(2,'0')} · Type</p>
+          <h2 class="type-name" style="font-family:${t.font};font-weight:${t.fontWeight}">${t.name}</h2>
+          <p class="pokemon-name">${t.pokemon}</p>
+          <div class="type-badges">${typeBadgesHtml}</div>
+          <p class="type-description">${t.whyBest}</p>
+          <p class="type-description" style="opacity:0.6;font-size:13px;margin-bottom:20px">${t.typeRole}</p>
+          <div class="pokedex-entry">
+            <div class="label">◆ POKÉDEX</div>
+            <p>${t.dex}</p>
+          </div>
+          <div class="type-effectiveness">
+            <div class="effectiveness-box"><div class="eff-label strong">STRONG VS</div><div class="eff-types">${strongList || '<span class="eff-type-tag">—</span>'}</div></div>
+            <div class="effectiveness-box"><div class="eff-label weak">WEAK TO</div><div class="eff-types">${weakList}</div></div>
+            <div class="effectiveness-box"><div class="eff-label resist">RESISTS</div><div class="eff-types">${resistList}</div></div>
+            ${immuneList}
+          </div>
+        </div>
+      `}
+      <div class="section-divider"></div>
+    `;
+    container.appendChild(section);
+  });
+}
+
+function getTypeColor(type) {
+  const colors = {
+    Normal:'#A8A77A', Fire:'#EE8130', Water:'#6390F0', Grass:'#7AC74C',
+    Electric:'#F7D02C', Ice:'#96D9D6', Fighting:'#C22E28', Poison:'#A33EA1',
+    Ground:'#E2BF65', Flying:'#A98FF3', Psychic:'#F95587', Bug:'#A6B91A',
+    Rock:'#B6A136', Ghost:'#735797', Dragon:'#6F35FC', Dark:'#705746',
+    Steel:'#B7B7CE', Fairy:'#D685AD'
+  };
+  return colors[type] || '#ffffff';
+}
+
+// ===== LANDING ORBS =====
+function buildOrbs() {
+  const container = document.getElementById('landing-orbs');
+  const outro = document.getElementById('outro-orbs');
+  TYPES.forEach((t, i) => {
+    const orb = document.createElement('div');
+    orb.className = 'type-orb';
+    orb.style.cssText = `background:${t.color};box-shadow:0 0 12px ${t.glow};animation-delay:${i * 0.1}s;animation-duration:${3 + i * 0.15}s`;
+    orb.title = t.name;
+    container.appendChild(orb);
+
+    const outroOrb = orb.cloneNode();
+    outroOrb.style.cssText = `background:${t.color};box-shadow:0 0 8px ${t.glow};width:12px;height:12px;animation-delay:${i*0.15}s`;
+    outro.appendChild(outroOrb);
+  });
+}
+
+// ===== STARS CANVAS =====
+function initStars() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const stars = Array.from({length: 200}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5,
+    o: Math.random(),
+    speed: Math.random() * 0.005 + 0.002,
+  }));
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.o += s.speed;
+      ctx.globalAlpha = (Math.sin(s.o) + 1) / 2 * 0.8 + 0.1;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+// ===== CUSTOM CURSOR =====
+const cursorCanvas = document.getElementById('cursor-canvas');
+const cursorCtx = cursorCanvas.getContext('2d');
+const cursorDot = document.getElementById('cursor-dot');
+const cursorRing = document.getElementById('cursor-ring');
+cursorCanvas.width = window.innerWidth;
+cursorCanvas.height = window.innerHeight;
+
+let mouse = { x: -200, y: -200 };
+let currentTypeData = null;
+let particles = [];
+let cursorDotPos = { x: -200, y: -200 };
+let ringPos = { x: -200, y: -200 };
+
+document.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  cursorDot.style.left = e.clientX + 'px';
+  cursorDot.style.top = e.clientY + 'px';
+  ringPos.x += (e.clientX - ringPos.x) * 0.12;
+  ringPos.y += (e.clientY - ringPos.y) * 0.12;
+  cursorRing.style.left = ringPos.x + 'px';
+  cursorRing.style.top = ringPos.y + 'px';
+  if (currentTypeData) spawnCursorParticles(e.clientX, e.clientY);
+});
+
+function spawnCursorParticles(x, y) {
+  const colors = currentTypeData.cursorColors;
+  for (let i = 0; i < 2; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 2 + 0.5;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1,
+      life: 1,
+      decay: Math.random() * 0.04 + 0.02,
+      size: Math.random() * 4 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
+  }
+}
+
+function animateCursor() {
+  cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05;
+    p.vx *= 0.96;
+    p.life -= p.decay;
+    cursorCtx.globalAlpha = p.life * 0.8;
+    cursorCtx.fillStyle = p.color;
+    cursorCtx.shadowColor = p.color;
+    cursorCtx.shadowBlur = 6;
+    cursorCtx.beginPath();
+    cursorCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    cursorCtx.fill();
+  });
+  cursorCtx.shadowBlur = 0;
+  cursorCtx.globalAlpha = 1;
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+function updateCursorForType(typeData) {
+  if (!typeData) return;
+  currentTypeData = typeData;
+  const color = typeData.color;
+  cursorDot.style.background = color;
+  cursorDot.style.boxShadow = `0 0 12px ${typeData.glow}, 0 0 4px ${color}`;
+  cursorRing.style.borderColor = color + '80';
+  document.documentElement.style.setProperty('--current-color', color);
+}
+
+window.addEventListener('resize', () => {
+  cursorCanvas.width = window.innerWidth;
+  cursorCanvas.height = window.innerHeight;
+});
+
+// ===== FLOATING PARTICLES PER SECTION =====
+// Per-type particle config: motion, shape, count, size range, color, glow
+const PARTICLE_CONFIGS = {
+  normal:   { motion: 'drift',    count: 18, size: [2,4], color: '#d4c896', glow: true,  dur: [10,18] },
+  fire:     { motion: 'rise',     count: 32, size: [2,5], color: '#ff8a3a', glow: true,  dur: [5,10] },
+  water:    { motion: 'bubble',   count: 26, size: [3,8], color: '#7ab0ff', glow: true,  shape: 'ring', dur: [7,14] },
+  grass:    { motion: 'fall',     count: 20, size: [6,11], color: '#8fd858', shape: 'leaf', dur: [8,16] },
+  electric: { motion: 'spark',    count: 28, size: [1,3], color: '#ffef6a', glow: true,  dur: [1.2,2.5] },
+  ice:      { motion: 'fall',     count: 32, size: [2,5], color: '#dbeff7', glow: true,  dur: [8,15] },
+  fighting: { motion: 'spark',    count: 16, size: [2,4], color: '#ff6a62', glow: true,  dur: [1.5,3] },
+  poison:   { motion: 'bubble',   count: 20, size: [3,7], color: '#d06ad0', glow: true,  dur: [7,13] },
+  ground:   { motion: 'drift',    count: 22, size: [1,3], color: '#e2bf65', glow: false, dur: [6,12] },
+  flying:   { motion: 'streak',   count: 14, size: [1,2], color: '#c7b7ff', glow: false, dur: [3,6] },
+  psychic:  { motion: 'twinkle',  count: 20, size: [2,4], color: '#ff9fc3', glow: true,  shape: 'star', dur: [2,4] },
+  bug:      { motion: 'twinkle',  count: 22, size: [2,5], color: '#d4e260', glow: true,  dur: [1.5,3.5] },
+  rock:     { motion: 'drift',    count: 22, size: [1,3], color: '#d4bd56', glow: false, dur: [5,10] },
+  ghost:    { motion: 'rise',     count: 16, size: [3,7], color: '#b489d9', glow: true,  dur: [5,11] },
+  dragon:   { motion: 'rise',     count: 18, size: [2,4], color: '#a76aff', glow: true,  dur: [6,12] },
+  dark:     { motion: 'drift',    count: 14, size: [2,4], color: '#b8a090', glow: false, dur: [8,14] },
+  steel:    { motion: 'spark',    count: 22, size: [1,2], color: '#d6d6ea', glow: true,  dur: [1.8,3.5] },
+  fairy:    { motion: 'twinkle',  count: 26, size: [2,5], color: '#ffb3d3', glow: true,  shape: 'star', dur: [1.8,4] }
+};
+
+function initSectionParticles() {
+  document.querySelectorAll('.particle-layer').forEach(layer => {
+    const typeId = layer.dataset.type;
+    const cfg = PARTICLE_CONFIGS[typeId] || { motion: 'drift', count: 10, size: [2,4], color: '#ffffff', glow: true, dur: [8,14] };
+    layer.innerHTML = '';
+    for (let i = 0; i < cfg.count; i++) {
+      const p = document.createElement('div');
+      const size = cfg.size[0] + Math.random() * (cfg.size[1] - cfg.size[0]);
+      const duration = cfg.dur[0] + Math.random() * (cfg.dur[1] - cfg.dur[0]);
+      const delay = -Math.random() * duration;
+      const left = Math.random() * 100;
+      const top = Math.random() * 100;
+
+      let cls = 'particle';
+      // pick motion class
+      if (cfg.motion === 'rise')    cls += ' p-rise';
+      if (cfg.motion === 'bubble')  cls += ' p-bubble';
+      if (cfg.motion === 'fall')    cls += ' p-fall';
+      if (cfg.motion === 'drift')   cls += ' p-drift';
+      if (cfg.motion === 'spark')   cls += ' p-spark';
+      if (cfg.motion === 'streak')  cls += ' p-streak-m p-streak';
+      if (cfg.motion === 'twinkle') cls += ' p-twinkle';
+      // shape modifiers
+      if (cfg.shape === 'leaf') cls += ' p-leaf';
+      if (cfg.shape === 'ring') cls += ' p-ring';
+      if (cfg.shape === 'star') cls += ' p-star';
+      p.className = cls;
+
+      const glow = cfg.glow ? `0 0 ${size*3}px ${cfg.color}` : 'none';
+      // streak uses horizontal stretch
+      let widthStyle = `${size}px`, heightStyle = `${size}px`;
+      if (cfg.motion === 'streak') { widthStyle = `${40 + Math.random()*40}px`; heightStyle = '1px'; }
+
+      p.style.cssText = `
+        width:${widthStyle}; height:${heightStyle};
+        left:${left}%; top:${top}%;
+        background:${cfg.color};
+        color:${cfg.color};
+        box-shadow:${glow};
+        animation-duration:${duration}s;
+        animation-delay:${delay}s;
+      `;
+      layer.appendChild(p);
+    }
+  });
+}
+
+// Scroll-linked parallax on type backgrounds for smooth transitions between sections
+function initParallax() {
+  const bgs = Array.from(document.querySelectorAll('.type-bg'));
+  let scheduled = false;
+  const update = () => {
+    scheduled = false;
+    const vh = innerHeight;
+    bgs.forEach(bg => {
+      const section = bg.parentElement;
+      const rect = section.getBoundingClientRect();
+      if (rect.bottom < -200 || rect.top > vh + 200) return;
+      const progress = (rect.top - vh) / (rect.height + vh) + 0.5;
+      const ty = progress * 60;
+      bg.style.transform = `translate3d(0, ${ty}px, 0) scale(1.08)`;
+    });
+  };
+  const schedule = () => {
+    if (scheduled) return;
+    scheduled = true;
+    (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb) => setTimeout(cb, 16))(update);
+  };
+  window.addEventListener('scroll', schedule, { passive: true });
+  update();
+}
+
+// ===== SCROLL-BASED VISIBILITY (replaces IntersectionObserver for preview compat) =====
+function initObserver() {
+  const sections = Array.from(document.querySelectorAll('.type-section'));
+  const landing = document.getElementById('landing');
+  const sidebarItems = document.querySelectorAll('.sidebar-item');
+  let activeTypeId = null;
+  let scheduled = false;
+
+  const update = () => {
+    scheduled = false;
+    const vh = innerHeight;
+    const vhCenter = vh / 2;
+
+    // Landing check — reset cursor when landing is mostly visible
+    const landingRect = landing.getBoundingClientRect();
+    const landingVisible = landingRect.bottom > vhCenter && landingRect.top < vhCenter;
+    if (landingVisible && activeTypeId !== null) {
+      cursorDot.style.background = '#fff';
+      cursorDot.style.boxShadow = 'none';
+      cursorRing.style.borderColor = 'rgba(255,255,255,0.5)';
+      currentTypeData = null;
+      document.documentElement.style.setProperty('--current-color', '#fff');
+      sidebarItems.forEach(item => item.classList.remove('active'));
+      activeTypeId = null;
+    }
+
+    // Find the section whose center is closest to the viewport center
+    let bestId = null;
+    let bestDist = Infinity;
+    sections.forEach(s => {
+      const rect = s.getBoundingClientRect();
+      const nearViewport = rect.bottom > -200 && rect.top < vh + 200;
+      s.classList.toggle('active-fx', nearViewport);
+      const fullyVisible = rect.top < vh * 0.7 && rect.bottom > vh * 0.3;
+      s.classList.toggle('visible', fullyVisible || rect.top < vh * 0.5);
+      const center = rect.top + rect.height / 2;
+      const dist = Math.abs(center - vhCenter);
+      if (rect.bottom > 0 && rect.top < vh && dist < bestDist) {
+        bestDist = dist;
+        bestId = s.dataset.type;
+      }
+    });
+
+    if (bestId && bestId !== activeTypeId && !landingVisible) {
+      activeTypeId = bestId;
+      const typeData = TYPES.find(t => t.id === bestId);
+      updateCursorForType(typeData);
+      sidebarItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.type === bestId);
+      });
+    }
+  };
+
+  const schedule = () => {
+    if (scheduled) return;
+    scheduled = true;
+    // Use setTimeout fallback in case rAF is throttled (preview/background tab)
+    (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb) => setTimeout(cb, 16))(update);
+  };
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule, { passive: true });
+  // Run now and after layout settles
+  update();
+  setTimeout(update, 100);
+  setTimeout(update, 400);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  buildSidebar();
+  buildSections();
+  buildOrbs();
+  initStars();
+  initSectionParticles();
+  initParallax();
+  initObserver();
+});
+</script>
+</body>
+</html>
