@@ -1,0 +1,67 @@
+{
+  "project_name": "PokeWeb",
+  "built_with": "/animated-website pipeline",
+  "build_date": "2026-03-21",
+  "status": "complete",
+  "tools": {
+    "stitch": {
+      "used": true,
+      "purpose": "layout generation",
+      "notes": "Generated layout mockups for hero, Pokédex grid, detail modal, and type chart sections."
+    },
+    "ui_ux_pro_max": {
+      "used": true,
+      "purpose": "style, palette, typography selection",
+      "notes": "Orchestrated sibling skills. Selected color tokens, type pairings, spacing scale, and motion language."
+    },
+    "firecrawl": {
+      "used": true,
+      "purpose": "reference scrape (PokéAPI + Bulbapedia)",
+      "notes": "Pulled Pokémon data, type matchups, and flavor text from public sources."
+    },
+    "magic_21st": {
+      "used": true,
+      "purpose": "interactive components (search, filter, card grid)",
+      "notes": "Generated component scaffolding adapted to vanilla HTML/CSS/JS."
+    },
+    "nano_banana_2": {
+      "used": true,
+      "purpose": "hero illustration + type-badge artwork",
+      "notes": "Generated hero composition and 18 type-icon backgrounds."
+    },
+    "brand_skill": {
+      "used": true,
+      "purpose": "voice, tagline, microcopy",
+      "notes": "Established 'Seasoned Trainer' voice archetype and tagline."
+    },
+    "design_skill": {
+      "used": true,
+      "purpose": "logo, favicon, type icons",
+      "notes": "Produced wordmark with stylized pokéball, favicon set, and 18 type-icon SVGs."
+    },
+    "design_system_skill": {
+      "used": true,
+      "purpose": "token architecture",
+      "notes": "Defined color, spacing, radii, elevation, and motion tokens as CSS custom properties."
+    },
+    "ui_styling_skill": {
+      "used": true,
+      "purpose": "shadcn-style interactive components",
+      "notes": "Search input, filter combobox, cards, dialog, badges, skeleton loaders, tooltips."
+    }
+  },
+  "fallbacks_triggered": [],
+  "missing_tools": [],
+  "deliverables": [
+    "index.html",
+    "styles.css",
+    "scripts/",
+    "images/",
+    "brief.txt",
+    "build-report.json"
+  ],
+  "deployment": {
+    "platform": "GitHub Pages",
+    "url": "https://nickh20.github.io/PokeWeb/"
+  }
+}
