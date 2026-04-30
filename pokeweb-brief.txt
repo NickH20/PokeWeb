@@ -1,0 +1,212 @@
+==============================================================
+SITE: PokeWeb
+==============================================================
+
+ROLE / CONTEXT
+--------------
+Role: You are the lead web developer for a modern Pokédex companion site.
+Context: Classic trainers deserve a cleaner, faster way to look up Pokémon,
+their types, and type-matchup logic. PokeWeb is a browser-based Pokédex
+that leans into the nostalgia of the original games while feeling like a
+modern tool, not a relic. Data comes from the public PokéAPI.
+
+BUILD STACK
+-----------
+1. Stitch              (layout generation)
+2. UI UX Pro Max       (style / palette / typography selection)
+3. Firecrawl           (PokéAPI reference + Bulbapedia fact scrape)
+4. Magic / 21st.dev    (card grid + search components)
+5. Nano Banana 2       (hero art + type-badge illustrations)
+6. Brand skill         (voice + tagline)
+7. Design skill        (logo, favicon, type icons)
+8. Design System skill (token architecture)
+9. UI Styling skill    (shadcn/ui components for search + modal)
+
+PURPOSE
+-------
+Let a user browse the full Pokédex, search by name or ID, view stats and
+type matchups for any Pokémon, and understand type effectiveness at a
+glance. Fast, keyboard-friendly, no account required.
+
+
+==============================================================
+STEP 2 — BRAND VOICE (for `brand` skill)
+==============================================================
+
+Voice archetype: The Seasoned Trainer — enthusiastic but not cringe.
+Talks like someone who grew up on Gen 1 and respects the craft. Never
+uses "gotta catch 'em all" unironically.
+
+Tone dimensions (1–5):
+- Formal ↔ Casual:        4 (casual, but literate)
+- Serious ↔ Playful:      4 (playful)
+- Reserved ↔ Expressive:  4
+- Modern ↔ Timeless:      3 (modern with retro nods)
+
+Voice rules:
+- Second person ("you," "your team") — never "the user."
+- One Pokémon reference per section max. Restraint > stuffing.
+- Short, confident sentences. No exclamation marks in body copy.
+
+Words to use:   team, matchup, dex, type, stats, quick, lookup
+Words to avoid: ultimate, legendary (as adjective), "gotta," synergy
+
+Messaging framework:
+- Tagline (≤7 words):   "The Pokédex, without the cartridge."
+- Value prop (≤20 words): "A fast, modern Pokédex for looking up
+                           Pokémon, stats, and type matchups in seconds."
+- Key phrases:  "Know your matchup," "Every Pokémon, one search,"
+                "Type advantage at a glance"
+
+
+==============================================================
+STEP 3 — DESIGN SYSTEM (for `ui-ux-pro-max` + `design-system`)
+==============================================================
+
+Style keywords: clean, retro-modern, confident, game-inspired, tactile
+
+Preferred direction: modern interface with subtle Game Boy / DS nods —
+soft pixel-inspired corners on a few accent elements, but typography
+and layout stay contemporary. No faux-CRT scanlines. No pixelated fonts
+for body copy.
+
+COLOR SYSTEM (semantic roles):
+- Primary:        bold pokéball red (#dc2626 neighborhood)
+- Secondary:      deep navy (Poké Ball bottom)
+- Tertiary:       soft sky blue (overworld skies)
+- Accent:         warm yellow (Pikachu, but muted — mustard not neon)
+- Surface-base:   near-white with warm undertone
+- Surface-raised: very light gray
+- Ink:            deep charcoal (NOT pure black)
+- Type colors:    one token per Pokémon type (18 total), pulled from
+                  franchise-accurate-but-desaturated hues
+
+Contrast: WCAG AA minimum.
+
+TYPOGRAPHY:
+- Display: a modern geometric sans with personality (e.g. Space Grotesk,
+           General Sans, or similar) — NOT Press Start 2P
+- Body:    humanist sans, 16px base, generous line height
+- Data:    a mono for stats/IDs (JetBrains Mono, DM Mono)
+- Scale:   1.250 modular
+
+SPACING: 4px base — 4, 8, 12, 16, 24, 32, 48, 64, 96
+RADII:   sm 6px | md 12px | lg 20px | pill 9999px
+         (Cards use md; pokéball accents use pill)
+
+ELEVATION: soft, colored-shadow style (tinted with primary at low opacity)
+
+MOTION:
+- Easing: cubic-bezier(0.22, 1, 0.36, 1)
+- Card hover: lift 4px + subtle red glow, 200ms
+- Pokéball loading spinner: 800ms rotate
+- prefers-reduced-motion honored
+
+
+==============================================================
+STEP 4 — REFERENCE SCRAPE (for Firecrawl)
+==============================================================
+Primary data: https://pokeapi.co/  (name, types, stats, sprites, IDs 1–1025)
+Reference:    https://bulbapedia.bulbagarden.net/ (flavor text only, no images)
+
+Borrow: data completeness, matchup logic.
+Avoid: Bulbapedia's 2006-era visual design.
+
+
+==============================================================
+STEP 5 — SECTIONS & LAYOUT (for Stitch)
+==============================================================
+
+1. Hero         — brand, tagline, search bar front and center
+2. Pokédex grid — responsive card grid, 1025 entries, lazy-loaded,
+                  each card: sprite, name, #ID, type badges
+3. Filters      — type filter chips, generation dropdown, sort toggle
+4. Detail modal — opens on card click: larger sprite, full stats (HP,
+                  Atk, Def, Sp.Atk, Sp.Def, Spd) as bar graphs,
+                  type matchups (weak to / resists / immune), flavor text
+5. Type chart   — dedicated page/section: full 18×18 type effectiveness
+                  matrix, interactive (hover a type to highlight row/col)
+6. Footer       — credits (PokéAPI, Bulbapedia), nothing else
+
+
+==============================================================
+STEP 6 — IMAGERY (for Nano Banana 2, with fallback)
+==============================================================
+
+Global art direction: clean vector-illustrative, soft shading, warm
+light, slight depth. No ultra-realistic renders.
+
+Hero:       stylized illustration of a few iconic silhouettes
+            (Pikachu, Charmander, Bulbasaur, Squirtle) arranged
+            in a modern composition — NOT a crowded collage
+OG image:   1200×630, brand + tagline + hero art
+Favicon:    minimalist pokéball (NOT the exact franchise logo)
+Type icons: 18 SVGs, one per Pokémon type, consistent 24×24 on a
+            rounded square background tinted with the type color
+
+Fallback: if Nano Banana 2 unavailable, use the `design` skill to
+hand-author SVG hero illustrations in the same color tokens.
+Never ship stock Pokémon sprites as hero art — those belong in
+the cards. Hero must be original.
+
+
+==============================================================
+STEP 7 — BRAND ASSETS (for `design` skill)
+==============================================================
+
+LOGO:
+- Concept:  wordmark "PokeWeb" with a small stylized pokéball icon
+            replacing the "o" — simplified, not the exact franchise mark
+- Variants: full, icon-only, monochrome
+- Export:   SVG, PNG @2x, favicon 32/48/180px
+
+ICONS: pokéball (brand), search, filter, chevron, close, external-link,
+       18 type icons.
+
+
+==============================================================
+STEP 8 — INTERACTIVE COMPONENTS (for `ui-styling`)
+==============================================================
+
+Required:
+- Input (search)  — debounced 200ms, keyboard shortcut "/" to focus
+- Combobox        — type + generation filters with multi-select
+- Card            — Pokédex entry card, hover + focus states
+- Dialog          — detail modal, traps focus, ESC to close
+- Badge           — type pills, one color per type
+- Skeleton        — loading state for card grid
+- Tooltip         — type-effectiveness values on chart hover
+
+States required everywhere: default, hover, active, focus-visible,
+disabled, loading. Focus ring 2px primary, 2px offset.
+
+
+==============================================================
+STEP 9 — ASSEMBLE & ANIMATE (final index.html)
+==============================================================
+
+RESPONSIVE: mobile-first. Breakpoints 640, 1024, 1280.
+
+PERFORMANCE:
+- LCP < 2.5s
+- Lazy-load card sprites below the fold
+- Virtualize the full 1025-entry grid if scroll perf suffers
+
+SEO / META:
+- <title>PokeWeb — The Pokédex, without the cartridge</title>
+- meta description = value prop from Step 2
+- OG tags with Step 7 image
+- JSON-LD: WebApplication
+
+ACCESSIBILITY:
+- Skip-to-content link
+- Alt text on every sprite: "{name}, {primary type}{/secondary type} Pokémon"
+- Keyboard navigable grid (arrow keys move between cards)
+- ARIA labels on filter controls
+
+ANIMATION:
+- Hero:        title fade+rise 900ms, 120ms per-word stagger
+- Card grid:   staggered reveal on scroll (IntersectionObserver, 60ms stagger)
+- Card hover:  lift 4px + tinted shadow
+- Modal open:  scale from 0.96 + fade, 240ms
+- Type chart:  cell highlight propagates row/col on hover, 120ms
